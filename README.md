@@ -2,6 +2,7 @@
 
 ### Team Members
 1. Nicholas Kositzke
+2. Andrew Dart
 
 ### Final Proposal
 1. Persona/Scenario
