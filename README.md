@@ -1,21 +1,51 @@
-# Team Name
-
-### Team Members
+### 575 Project Proposal Group
 1. Nicholas Kositzke
 2. Andrew Dart
 3. Param Bhandare
 4. Chanodom Tannarat
 
-### Final Proposal
-1. Persona/Scenario
-    1. Persona
-    2. Scenario
-2. Requirements Document
+### Target User Profile (Persona): 
+Name and Position: Dr. Amy Rosebraugh, State Archeologist
+Background Description: Dr. Rosebraugh is the Wisconsin State Archeologist. Her Ph.D. thesis focused on indigenous effigy mound data primarily located in Wisconsin. While her work is geographical, she is not a professionally trained geographer or cartographer. This resulted in the use of Microsoft Paint to create the maps for her thesis. She wants her indigenous mound data to be visualized in an interactive cartographic product, specifically a data dashboard that she can use to view her work in a digital environment. She’s hoping to view a series of features overlaid with the 90 mound sites she’s identified to confirm her previous findings: 1) that Late Woodland effigy mound sites correspond with oak savannah terrain as it existed before American settlement, 2) that most effigy mound sites correspond/are shaped by the raised terrain they sit on (and that most effigy mound sites are indeed on raised terrain), 3) that most mound sites are located nearby bodies of water, and 4) that the Late Woodland “culture” was in fact a series of related but distinct subcultures. This digitization will provide her with an accurate base of information upon which she can base future research into these mound sites.
 
-3. Wireframes
+### User Case Scenario
+Looking at a digital reproduction of her existing research, Dr. Rosebrough will be able to further investigate new trends and patterns related to the Late Woodland culture as viewed through their effigy mounds. As she opens new lines of inquiry, she’ll be able to add data to this map and work with it there.
 
+### Requirements Document
 
+Representation
+| No. | Representation | Description |
+| :--- | :--- | :--- |
+| 1 | Basemap | The section of the upper Midwest included in the study area (southern WI, northern IL, northeastern IA, and southeastern MN). Topographical map, state boundaries not included. Data source will be natural earth |
+| 2 | Mound Sites | The locations of the 90 mound sites, digitized from Dr. Rosebrough’s data |
+| 3 | Mound Localities | The 20 localities that the effigy mound sites are sub-divided into in Dr. Rosebrough’s research, digitized from her data |
+| 4 | Study Area Subdivisions | The various ecological subdivisions (Driftless Area, Four Lakes, etc) that Dr. Rosebrough divided her study area into, digitized from her data |
+| 5 | Pre-Settlement Land Cover | Land use/vegetation cover as it existed prior to American settlement in the 1830s. Digitized from her data, and complemented with the data sources she drew her work from (Finley 1976; Griffith, et al. 1994; Marschner 1974; Westal 1931) |
+| 6 | Land Topography | DEM file of study area topography to overlay with mounds |
+| 7 | Water Features | Lakes, rivers, and large water features in the study to measure mound distance from |
+| 8 | Mound Type Aggregates | Map of the various mound types/symbols at each site, with percentages showing how many mounds at the site correspond with each of the twelve effigy symbols |
+| 9 | Legend | Legend depicting the mound icons, with descriptions of what effigy symbol each icon corresponds to |
+| 10 | Overview | Landing page for the web map describing our work, data sources, and digitization process to serve as a basis for future wqork |
 
+Interaction
 
+### Wireframes
+Title Page
 
+![image](img/Wireframe%20Title%20-%201.png)
 
+Layer View
+
+![image](img/Wireframe%20Layers%20-%202.png)
+
+DEM/Topo Layer/View
+
+![image](img/Wireframe%20DEM%20-%203.png)
+
+Vegetation Layer/View
+
+![image](img/Wireframe%20Vegetation%20-%204.png)
+
+Least Cost Analysis Layer/View
+
+![image](img/Wireframe%20LCA%20-%205.png)
