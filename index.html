@@ -1,29 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width">
-            <title></title>
+<head>
+    <meta charset="utf-8">
+    <title>Wisconsin Effigy Mounds | Spatial Analysis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="brand">
+            <h1>Effigy Mound Explorer</h1>
+        </div>
+        <div id="global-stats">Total Sites: <strong id="stat-count">0</strong></div>
+    </header>
 
-        <!--put your external stylesheet links here-->
-        <link rel="stylesheet" href="css/style.css">
-        <!--[if IE<9]>
-            <link rel="stylesheet" href="css/style.ie.css">
-        <![endif]-->
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="card" id="info-card">
+                <h2>Site Analysis</h2>
+                <div id="detail-content">
+                    <p class="hint">Select a mound on the map to view archaeological data and effigy counts.</p>
+                </div>
+            </div>
 
-         <!--you can also place internal styles here;
-             place these within <style> tags-->
-        
-    </head>
+            <div class="card">
+                <h3>Analysis Layers</h3>
+                <div class="layer-control">
+                    <div class="layer-item">
+                        <input type="checkbox" id="layer-nick" checked>
+                        <label for="layer-nick">Vegetation (Nick)</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="layer-chan-lca" checked>
+                        <label for="layer-chan-lca">Least Cost Analysis (Chanodom)</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="layer-chan-catch" checked>
+                        <label for="layer-chan-catch">Clan Catchments (Chanodom)</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="layer-param" checked>
+                        <label for="layer-param">Proportional Aggregates (Param)</label>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
-    <body>
-        <!--put your initial page content here-->
+        <main class="map-workspace">
+            <div id="map-container"></div>
+        </main>
+    </div>
 
-        <!--you can also use this space for internal scripts;
-        place these within <script> tags-->
-
-        <!--put your external script links here-->
-        <script type="text/javascript" src="js/main.js"></script>
-        <script type="text/javascript" src="lib/jquery-3.5.1.js"></script>
-    </body>
+    <script src="js/main.js"></script>
+</body>
 </html>
