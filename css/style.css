@@ -45,7 +45,25 @@ body { display: flex; flex-direction: column; }
 .stat-item:last-child { border-bottom: none; }
 .stat-item strong { color: #f1c40f; }
 
-.layer-item { margin-bottom: 8px; font-size: 0.9em; display: flex; align-items: center; gap: 8px; }
+.layer-item {
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.layer-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.layer-subcontrol {
+    width: 100%;
+    margin-left: 22px; /* keeps indentation under checkbox */
+}
 
 .map-workspace { flex: 1; position: relative; background-color: #d6eaf8; }
 #map-container { width: 100%; height: 100%; cursor: crosshair; }
@@ -54,3 +72,67 @@ body { display: flex; flex-direction: column; }
 .mounds { fill: #27ae60; stroke: white; stroke-width: 0.5px; cursor: pointer; transition: 0.2s; }
 .mounds:hover { fill: #e67e22; }
 .hint { color: #95a5a6; font-style: italic; font-size: 0.9em; }
+
+.layer-subcontrol {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.25s ease;
+    margin-left: 22px; /* indented under checkbox */
+}
+
+.layer-param-group.active .layer-subcontrol {
+    max-height: 60px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.popup {
+    position: absolute;
+    top: 120px;
+    right: 20px;
+    width: 260px;
+    background: rgba(44, 62, 80, 0.95);
+    color: white;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    z-index: 1000;
+    pointer-events: auto;
+    transform: translate(0, 0);
+}
+
+.popup.hidden {
+    display: none;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+#popup-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.pie-tooltip {
+    position: absolute;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 2000;
+}
+
+.pie-tooltip.hidden {
+    display: none;
+}

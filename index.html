@@ -28,20 +28,37 @@
                 <h3>Analysis Layers</h3>
                 <div class="layer-control">
                     <div class="layer-item">
-                        <input type="checkbox" id="layer-nick" checked>
-                        <label for="layer-nick">Vegetation (Nick)</label>
+                        <div class="layer-item">
+                            <div class="layer-header">
+                                <input type="checkbox" id="layer-nick" checked>
+                                <label for="layer-nick">Vegetation (Nick)</label>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="layer-chan-lca" checked>
-                        <label for="layer-chan-lca">Least Cost Analysis (Chanodom)</label>
+                        <div class="layer-header">
+                            <input type="checkbox" id="layer-chan-lca" checked>
+                            <label for="layer-chan-lca">Least Cost Analysis (Chanodom)</label>
+                        </div>  
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="layer-chan-catch" checked>
-                        <label for="layer-chan-catch">Clan Catchments (Chanodom)</label>
+                        <div class="layer-header">
+                            <input type="checkbox" id="layer-chan-catch" checked>
+                            <label for="layer-chan-catch">Clan Catchments (Chanodom)</label>
+                        </div>
                     </div>
-                    <div class="layer-item">
-                        <input type="checkbox" id="layer-param" checked>
-                        <label for="layer-param">Proportional Aggregates (Param)</label>
+                    <div class="layer-item layer-param-group">
+                        <div class="layer-header">
+                            <input type="checkbox" id="layer-param" checked>
+                            <label for="layer-param">Proportional Aggregates (Param)</label>
+                        </div>
+
+                        <div class="layer-subcontrol" id="param-subcontrol">
+                            <select id="param-aggregate-select">
+                                <option value="">Select aggregation...</option>
+                                <option value="huc8">Sub-basin</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -51,6 +68,16 @@
             <div id="map-container"></div>
         </main>
     </div>
+
+    <div id="popup" class="popup hidden">
+        <div class="popup-header">
+            <span id="popup-title"></span>
+            <button id="popup-close">✕</button>
+        </div>
+        <div id="popup-chart"></div>
+    </div>
+
+    <div id="pie-tooltip" class="pie-tooltip hidden"></div>
 
     <script src="js/main.js"></script>
 </body>

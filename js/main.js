@@ -4,6 +4,17 @@ window.onload = function() {
     const width = rect.width;
     const height = rect.height;
 
+    const paramCheckbox = document.getElementById("layer-param");
+    const paramGroup = document.querySelector(".layer-param-group");
+    const paramSelect = document.getElementById("param-aggregate-select");
+
+    paramSelect.style.display = paramCheckbox.checked ? "block" : "none";
+
+    // initial state
+    if (paramCheckbox.checked) {
+        paramGroup.classList.add("active");
+    }
+
     const map = d3.select("#map-container")
         .append("svg")
         .attr("width", width)
@@ -24,16 +35,19 @@ window.onload = function() {
     const chanCatchG = map.append("g").attr("id", "chanodom-catchment"); 
     const boundaryG = map.append("g").attr("id", "wi-boundary-layer");
     const chanLcaG = map.append("g").attr("id", "chanodom-lca");       
-    const paramMoundG = map.append("g").attr("id", "param-mounds");
+    const subBasinG = map.append("g").attr("id", "subbasin-layer");
+    const paramMoundG = map.append("g").attr("id", "param-mounds"); // keep last for drawing it on top?
 
     const promises = [
         d3.json("data/mound_sites.json"),
-        d3.json("data/wisconsin.topojson")
+        d3.json("data/wisconsin.topojson"),
+        d3.json("data/sub-basin-mound-aggregate.geojson")
     ];
 
     Promise.all(promises).then(function(data) {
         const moundData = data[0];
         const topoData = data[1];
+        const subbasinData = data[2];
 
         const objectName = Object.keys(topoData.objects)[0];
         const wisconsin = topojson.feature(topoData, topoData.objects[objectName]);
@@ -61,7 +75,23 @@ window.onload = function() {
 
         // [CHANODOM'S CODE - Catchments/LCA]
 
-        // [PARAM'S CODE - Proportional Symbols]
+        // [PARAM'S CODE - Proportions Aggregation]
+
+        subBasinG.selectAll(".subbasin")
+            .data(subbasinData.features)
+            .enter()
+            .append("path")
+            .attr("class", "subbasin")
+            .attr("d", path)
+            .style("fill", "#3498db")
+            .style("stroke", "#1f2d3a")
+            .style("stroke-width", 0.5)
+            .style("opacity", 0.3)
+            .on("click", function(event, d) {
+                showPopup(event, d.properties);
+            });
+
+        updateSubbasinVisibility();
 
         // ==========================================
 
@@ -111,4 +141,134 @@ window.onload = function() {
         });
 
     map.call(zoom);
+
+    paramCheckbox.addEventListener("change", function () {
+
+        paramGroup.classList.toggle("active", this.checked);
+
+        if (!this.checked) {
+            paramSelect.value = "";
+        }
+
+        updateSubbasinVisibility();
+    });
+
+    paramSelect.addEventListener("change", function () {
+        updateSubbasinVisibility();
+    });
+
+    function updateSubbasinVisibility() {
+
+        if (!paramCheckbox.checked) {
+            subBasinG.selectAll(".subbasin")
+                .transition()
+                .duration(200)
+                .style("opacity", 0.0);
+            return;
+        }
+
+        if (paramSelect.value === "huc8") {
+            subBasinG.selectAll(".subbasin")
+                .transition()
+                .duration(300)
+                .style("opacity", 0.6);
+        } else {
+            subBasinG.selectAll(".subbasin")
+                .transition()
+                .duration(200)
+                .style("opacity", 0.0);
+        }
+    }
+
+    function showPopup(event, props) {
+        const popup = document.getElementById("popup");
+        const title = document.getElementById("popup-title");
+        const container = d3.select("#popup-chart");
+        const tooltip = d3.select("#pie-tooltip");
+        const [x, y] = d3.pointer(event);
+
+        popup.classList.remove("hidden");
+
+        popup.style.left = (event.pageX + 15) + "px";
+        popup.style.top = (event.pageY + 15) + "px";
+
+        title.textContent = props.HUC8_NAME;
+
+        container.selectAll("*").remove();
+
+        const species = [
+            "Bird",
+            "Fork Tailed Bird",
+            "Goose",
+            "Bear",
+            "Panther",
+            "Long Tailed Quadruped",
+            "Short Tailed Quadruped",
+            "Unknown Quadruped",
+            "Water Spirit",
+            "Long Tailed Turtle",
+            "Short Tailed Turtle",
+            "No Tailed Turtle",
+            "Unknown Turtle",
+            "Mink"
+        ];
+
+        const data = species
+            .map(k => ({ key: k, value: +props[k] || 0 }))
+            .filter(d => d.value > 0);
+
+        const width = 240;
+        const height = 240;
+        const radius = Math.min(width, height) / 2;
+
+        const svg = container.append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width/2},${height/2})`);
+
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.key))
+            .range(d3.schemeTableau10);
+
+        const pie = d3.pie().value(d => d.value);
+        const arc = d3.arc().innerRadius(0).outerRadius(radius);
+
+        svg.selectAll("path")
+            .data(pie(data))
+            .enter()
+            .append("path")
+            .attr("d", arc)
+            .attr("fill", d => color(d.data.key))
+            .attr("stroke", "#2c3e50")
+            .style("stroke-width", "1px")
+            .on("mouseover", function(event, d) {
+
+                d3.select(this)
+                    .style("opacity", 0.7)
+                    .style("stroke-width", "2px");
+
+                tooltip
+                    .classed("hidden", false)
+                    .text(`${d.data.key}: ${d.data.value}`);
+            })
+            .on("mousemove", function(event) {
+
+                tooltip
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY + 10) + "px");
+            })
+            .on("mouseout", function() {
+
+                d3.select(this)
+                    .style("opacity", 1)
+                    .style("stroke-width", "1px");
+
+                tooltip.classed("hidden", true);
+            });
+    }
+
+    document.getElementById("popup-close").addEventListener("click", function () {
+        document.getElementById("popup").classList.add("hidden");
+    });
 };
