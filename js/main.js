@@ -31,23 +31,25 @@ window.onload = function() {
     const path = d3.geoPath().projection(projection);
 
     // TEAM LAYERS
-    const nickVegG = map.append("g").attr("id", "nick-vegetation");
-    const chanCatchG = map.append("g").attr("id", "chanodom-catchment"); 
     const boundaryG = map.append("g").attr("id", "wi-boundary-layer");
-    const chanLcaG = map.append("g").attr("id", "chanodom-lca");       
     const subBasinG = map.append("g").attr("id", "subbasin-layer");
-    const paramMoundG = map.append("g").attr("id", "param-mounds"); // keep last for drawing it on top?
+    const chanClanG = map.append("g").attr("id", "chanodom-catchment"); 
+    const nickVegG = map.append("g").attr("id", "nick-vegetation");
+    const chanLcaG = map.append("g").attr("id", "chanodom-lca");       
+    const paramMoundG = map.append("g").attr("id", "param-mounds"); // Render above all other layers
 
     const promises = [
         d3.json("data/mound_sites.json"),
         d3.json("data/wisconsin.topojson"),
-        d3.json("data/sub-basin-mound-aggregate.geojson")
+        d3.json("data/sub-basin-mound-aggregate.geojson"),
+        d3.json("data/clanTerritories.topojson")
     ];
 
     Promise.all(promises).then(function(data) {
         const moundData = data[0];
         const topoData = data[1];
         const subbasinData = data[2];
+        const clanTerritoriesData = data[3];
 
         const objectName = Object.keys(topoData.objects)[0];
         const wisconsin = topojson.feature(topoData, topoData.objects[objectName]);
@@ -60,11 +62,19 @@ window.onload = function() {
         paramMoundG.selectAll(".mounds")
             .data(moundData.features)
             .enter()
-            .append("path")
+
+            // Changed this section to get variable sizes when zooming 
+            // -Chanodom
+            .append("circle")
+            .attr("cx", d => d.geometry ? projection(d.geometry.coordinates)[0] : 0)
+            .attr("cy", d => d.geometry ? projection(d.geometry.coordinates)[1] : 0)
+            .attr("r", 2.5)
+            // 
+
             .attr("class", "mounds")
             .attr("d", path.pointRadius(4)) 
             .on("click", function(event, d) {
-                updateUI(d.properties, this);
+                updateUI(d.properties, this)
             });
 
         // ==========================================
@@ -74,6 +84,75 @@ window.onload = function() {
         // [NICK'S CODE - Vegetation]
 
         // [CHANODOM'S CODE - Catchments/LCA]
+
+        const clanObjects = Object.keys(clanTerritoriesData.objects)[0];
+        const clanFeatures = topojson.feature(clanTerritoriesData, clanTerritoriesData.objects[clanObjects]);
+
+        const clanColorScale = d3.scaleOrdinal(d3.schemeTableau10); // Used for random color palette
+
+        // Loads clan features
+
+        chanClanG.selectAll(".clan-feature")
+            .data(clanFeatures.features)
+            .enter()
+            .append("path")
+            .attr("class", "clan-feature")
+            .attr("d", path)
+
+            // Random color palette per feature
+            .style("fill", d => clanColorScale(d.properties.Clan || "Unknown")) 
+
+            // Prune stroke of "core" clan areas, double transparent overlays make them darker
+            // Sets total territory stroke color to darker fill color 
+
+            .style("stroke", d => {
+                const type = String(d.properties["Area_Type"] || "").trim().toLowerCase();
+                
+                if (type === "core area") {
+                    return "none";
+                } else {
+                    const fillColor = clanColorScale(d.properties.Clan || "Unknown");
+                    return d3.color(fillColor).darker(1.2); 
+                }
+            })
+            .style("stroke-width", d => {
+                const type = String(d.properties["Area_Type"] || "").trim().toLowerCase();
+                return type === "core area" ? 0 : 1;
+            })
+            
+            .style("opacity", 0); // Initially hidden
+
+        // Clan legend event listener & random color palette
+
+        const uniqueClans = [...new Set(clanFeatures.features.map(d => d.properties.Clan || "Unknown"))];
+        const clanLegendItemsContainer = d3.select("#legend-items");
+                
+        clanLegendItemsContainer.selectAll(".legend-item")
+            .data(uniqueClans)
+            .enter()
+            .append("div")
+            .attr("class", "legend-item")
+            .html(d => `
+                <div class="legend-content">
+                    <div class="legend-color" style="background-color: ${clanColorScale(d)}"></div>
+                    <span>${d}</span>
+                </div>
+                <input type="checkbox" class="clan-toggle" value="${d}" checked>
+            `);
+
+        // Clan legend symbols event listener
+
+        d3.selectAll(".clan-toggle").on("change", function() {
+            const selectedClan = this.value;
+            const isChecked = this.checked;
+
+            // Finds checked feature and fades in/out
+            chanClanG.selectAll(".clan-feature")
+                .filter(d => (d.properties.Clan || "Unknown") === selectedClan)
+                .transition()
+                .duration(200)
+                .style("opacity", isChecked ? 0.6 : 0);
+        });
 
         // [PARAM'S CODE - Proportions Aggregation]
 
@@ -129,18 +208,56 @@ window.onload = function() {
             </div>`;
 
         d3.select("#detail-content").html(fullContent);
-        d3.selectAll(".mounds").style("opacity", 0.4).style("stroke", "white").style("stroke-width", "0.5px");
-        d3.select(element).style("opacity", 1).style("stroke", "#f1c40f").style("stroke-width", "3px").raise();
+        d3.selectAll(".mounds").style("opacity", 0.4).style("stroke", "white").style("stroke-width", "0.2px"); // Chanodom
+        d3.select(element).style("opacity", 1).style("stroke", "#f1c40f").style("stroke-width", "0.5px").raise();
     }
 
+    // I changed this function to increase clickability of sites when zoomed in
+    // Chanodom
     const zoom = d3.zoom()
         .scaleExtent([1, 15])
         .on("zoom", (event) => {
             map.selectAll("g").attr("transform", event.transform);
-            map.selectAll(".mounds").style("stroke-width", 0.5 / event.transform.k);
+            // map.selectAll(".mounds").style("stroke-width", 0.5 / event.transform.k);
+
+            const transform = event.transform;
+            
+            paramMoundG.selectAll(".mounds")
+                .attr("r", Math.max(1, 2 / Math.pow(transform.k, 1))) // This handles the scaling of the site symbols
+                // .style("stroke-width", 0.5 / transform.k);
         });
+    // 
 
     map.call(zoom);
+
+    const chanClanCheckbox = document.getElementById("layer-chan-clan");
+    const clanLegendContainer = document.getElementById("clan-legend"); // Clan symbols legend
+
+    chanClanCheckbox.addEventListener("change", function() {
+        if (this.checked) {
+            // Shows legend
+            clanLegendContainer.classList.remove("hidden");
+            
+            // Layer fade in only if checked
+            chanClanG.selectAll(".clan-feature")
+                .transition()
+                .duration(300)
+                .style("opacity", function(d) {
+                    const clanName = d.properties.Clan || "Unknown";
+                    const checkbox = document.querySelector(`.clan-toggle[value="${clanName}"]`);
+                    return (checkbox && checkbox.checked) ? 0.6 : 0;
+                });
+        } else {
+            // Hides all clan features
+            chanClanG.selectAll(".clan-feature")
+                .transition()
+                .duration(200)
+                .style("opacity", 0.0);
+            
+            // Hides legend
+            clanLegendContainer.classList.add("hidden");
+        }
+    });
 
     paramCheckbox.addEventListener("change", function () {
 
