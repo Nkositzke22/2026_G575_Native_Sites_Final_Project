@@ -33,16 +33,17 @@ window.onload = function() {
     // TEAM LAYERS
     const boundaryG = map.append("g").attr("id", "wi-boundary-layer");
     const subBasinG = map.append("g").attr("id", "subbasin-layer");
-    const chanClanG = map.append("g").attr("id", "chanodom-catchment"); 
+    const chanClanG = map.append("g").attr("id", "chanodom-clan"); 
     const nickVegG = map.append("g").attr("id", "nick-vegetation");
-    const chanLcaG = map.append("g").attr("id", "chanodom-lca");       
+    const chanCatchG = map.append("g").attr("id", "chanodom-catchment");       
     const paramMoundG = map.append("g").attr("id", "param-mounds"); // Render above all other layers
 
     const promises = [
         d3.json("data/mound_sites.json"),
         d3.json("data/wisconsin.topojson"),
         d3.json("data/sub-basin-mound-aggregate.geojson"),
-        d3.json("data/clanTerritories.topojson")
+        d3.json("data/clanTerritories.topojson"),
+        d3.json("data/catchmentAreas2.geojson")
     ];
 
     Promise.all(promises).then(function(data) {
@@ -50,6 +51,7 @@ window.onload = function() {
         const topoData = data[1];
         const subbasinData = data[2];
         const clanTerritoriesData = data[3];
+        const catchmentAreasData = data[4];
 
         const objectName = Object.keys(topoData.objects)[0];
         const wisconsin = topojson.feature(topoData, topoData.objects[objectName]);
@@ -83,15 +85,66 @@ window.onload = function() {
         
         // [NICK'S CODE - Vegetation]
 
-        // [CHANODOM'S CODE - Catchments/LCA]
+        // [CHANODOM'S CODE - Catchments/Clan Affiliation]
+
+        const catchmentLabels = {
+            14400: "4 Hours",
+            86400: "24 Hours"
+        };
+
+        const catchmentColorScale = d3.scaleOrdinal()
+            .domain([14400, 86400])
+            .range(["#27ae60", "#a01616"]);
+
+        // Renders catchments
+        chanCatchG.selectAll(".catchment-feature")
+            .data(catchmentAreasData.features)
+            .enter()
+            .append("path")
+            .attr("class", "catchment-feature")
+            .attr("d", path)
+            .style("fill", "none")
+            .style("stroke", d => {
+                const val = +d.properties.level; // Forces a nunber
+                const color = catchmentColorScale(val);
+                return color ? d3.color(color).darker(1) : "#999";
+            })            .style("stroke-width", 1.5)
+            .style("opacity", 0);
+
+        // Catchment legend
+        const fixedTimes = [14400, 86400];
+        const catchLegendItems = d3.select("#catchment-legend-items");
+
+        catchLegendItems.selectAll(".legend-item")
+            .data(fixedTimes)
+            .enter()
+            .append("div")
+            .attr("class", "legend-item")
+            .html(d => `
+                <div class="legend-content">
+                    <div class="legend-color" style="background-color: ${catchmentColorScale(d)}"></div>
+                    <span>${catchmentLabels[d]}</span>
+                </div>
+            `);
+
+        // Catchment legend event listeners
+        d3.selectAll(".catchment-toggle").on("change", function() {
+            const val = +this.value; // Convert string value to number
+            const isChecked = this.checked;
+
+            chanCatchG.selectAll(".catchment-feature")
+                .filter(d => d.properties.level === val)
+                .transition()
+                .duration(200)
+                .style("opacity", isChecked ? 0.5 : 0);
+        });
 
         const clanObjects = Object.keys(clanTerritoriesData.objects)[0];
         const clanFeatures = topojson.feature(clanTerritoriesData, clanTerritoriesData.objects[clanObjects]);
 
-        const clanColorScale = d3.scaleOrdinal(d3.schemeTableau10); // Used for random color palette
+        const clanColorScale = d3.scaleOrdinal(d3.schemeTableau10); // Will be used for random color palettes later
 
         // Loads clan features
-
         chanClanG.selectAll(".clan-feature")
             .data(clanFeatures.features)
             .enter()
@@ -123,7 +176,6 @@ window.onload = function() {
             .style("opacity", 0); // Initially hidden
 
         // Clan legend event listener & random color palette
-
         const uniqueClans = [...new Set(clanFeatures.features.map(d => d.properties.Clan || "Unknown"))];
         const clanLegendItemsContainer = d3.select("#legend-items");
                 
@@ -141,7 +193,6 @@ window.onload = function() {
             `);
 
         // Clan legend symbols event listener
-
         d3.selectAll(".clan-toggle").on("change", function() {
             const selectedClan = this.value;
             const isChecked = this.checked;
@@ -230,6 +281,31 @@ window.onload = function() {
 
     map.call(zoom);
 
+    // Catchment event listeners
+    const chanCatchCheckbox = document.getElementById("layer-chan-catchment");
+    const catchLegendContainer = document.getElementById("catchment-legend");
+
+    chanCatchCheckbox.addEventListener("change", function() {
+        if (this.checked) {
+            catchLegendContainer.classList.remove("hidden");
+            
+            // Turns on all catchment features
+            chanCatchG.selectAll(".catchment-feature")
+                .transition()
+                .duration(300)
+                .style("opacity", 0.5);
+        } else {
+            // Turns off all off catchment features
+            chanCatchG.selectAll(".catchment-feature")
+                .transition()
+                .duration(200)
+                .style("opacity", 0);
+            
+            catchLegendContainer.classList.add("hidden");
+        }
+    });
+
+    // Clan event listeners
     const chanClanCheckbox = document.getElementById("layer-chan-clan");
     const clanLegendContainer = document.getElementById("clan-legend"); // Clan symbols legend
 
