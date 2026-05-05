@@ -4,6 +4,20 @@ window.onload = function() {
     const width = rect.width;
     const height = rect.height;
 
+
+    const splash = document.getElementById("splash-screen");
+    const closeBtn = document.getElementById("close-splash");
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function() {
+            splash.classList.add("splash-hidden");
+            
+            setTimeout(() => {
+                splash.style.display = "none";
+            }, 500); 
+        });
+    }
+
     const paramCheckbox = document.getElementById("layer-param");
     const paramGroup = document.querySelector(".layer-param-group");
     const paramSelect = document.getElementById("param-aggregate-select");
@@ -21,6 +35,9 @@ window.onload = function() {
         .attr("height", height)
         .attr("viewBox", `0 0 ${width} ${height}`);
 
+    // Need this for the vegetation layer to show properly
+    const defs = map.append("defs"); 
+
     const projection = d3.geoAlbers()
         .center([0, 44.75])
         .rotate([90, 0, 0])
@@ -34,16 +51,22 @@ window.onload = function() {
     const boundaryG = map.append("g").attr("id", "wi-boundary-layer");
     const subBasinG = map.append("g").attr("id", "subbasin-layer");
     const chanClanG = map.append("g").attr("id", "chanodom-clan"); 
-    const nickVegG = map.append("g").attr("id", "nick-vegetation");
+    
+    // Veg layer fix
+    const nickVegG = map.append("g")
+        .attr("id", "nick-vegetation")
+        .attr("clip-path", "url(#wi-clip)"); 
+
     const chanCatchG = map.append("g").attr("id", "chanodom-catchment");       
     const paramMoundG = map.append("g").attr("id", "param-mounds"); // Render above all other layers
 
     const promises = [
-        d3.json("data/mound_sites.json"),
+        d3.json("data/mound_sites_WI.json"),
         d3.json("data/wisconsin.topojson"),
         d3.json("data/sub-basin-mound-aggregate.geojson"),
         d3.json("data/clanTerritories.topojson"),
-        d3.json("data/catchmentAreas2.geojson")
+        d3.json("data/catchmentAreas2.geojson"),
+        d3.json("data/wi_presettlement_veg.json") 
     ];
 
     Promise.all(promises).then(function(data) {
@@ -52,9 +75,17 @@ window.onload = function() {
         const subbasinData = data[2];
         const clanTerritoriesData = data[3];
         const catchmentAreasData = data[4];
+        const vegData = data[5]; 
 
         const objectName = Object.keys(topoData.objects)[0];
         const wisconsin = topojson.feature(topoData, topoData.objects[objectName]);
+
+        // Veg layer workaround
+        defs.append("clipPath")
+            .attr("id", "wi-clip")
+            .append("path")
+            .datum(wisconsin)
+            .attr("d", path);
 
         boundaryG.append("path")
             .datum(wisconsin)
@@ -84,6 +115,60 @@ window.onload = function() {
         // ==========================================
         
         // [NICK'S CODE - Vegetation]
+        // Gemini: Implementation of filtered vegetation polygons with winding-order fix
+        const meshName = Object.keys(vegData.objects)[0]; 
+        const topoObject = vegData.objects[meshName];
+        let vegFeatures = topojson.feature(vegData, topoObject).features;
+
+        const realVegetation = vegFeatures.filter(d => {
+            const area = d.properties.Shape_Area;
+            return d.properties.CONSD_POLY && area < 40000000000;
+        });
+
+        // Gemini: Create color scale and legend logic for individual forest types
+        const vegTypes = [...new Set(realVegetation.map(d => d.properties.CONSD_POLY))];
+        const vegColorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(vegTypes);
+
+        nickVegG.selectAll(".veg-poly")
+            .data(realVegetation)
+            .enter()
+            .append("path")
+            .attr("class", "veg-poly")
+            .attr("d", path)
+            .style("fill", d => vegColorScale(d.properties.CONSD_POLY))
+            .style("stroke", "none")
+            .style("opacity", 0);
+
+        // Populate Veg Legend
+        const vegLegendItemsContainer = d3.select("#veg-legend-items");
+        vegLegendItemsContainer.selectAll(".legend-item")
+            .data(vegTypes)
+            .enter()
+            .append("div")
+            .attr("class", "legend-item")
+            .html(d => `
+                <div class="legend-content">
+                    <div class="legend-color" style="background-color: ${vegColorScale(d)}"></div>
+                    <span>${d}</span>
+                </div>
+                <input type="checkbox" class="veg-toggle" value="${d}" checked>
+            `);
+
+        // Veg individual toggle listener
+        d3.selectAll(".veg-toggle").on("change", function() {
+            const selectedType = this.value;
+            const isChecked = this.checked;
+            const masterChecked = document.getElementById("layer-nick-veg").checked;
+
+            nickVegG.selectAll(".veg-poly")
+                .filter(d => d.properties.CONSD_POLY === selectedType)
+                .transition()
+                .duration(200)
+                .style("opacity", (isChecked && masterChecked) ? 0.7 : 0);
+        });
+
+        console.log("Drawing " + realVegetation.length + " real forest patches.");
+
 
         // [CHANODOM'S CODE - Catchments/Clan Affiliation]
 
@@ -280,6 +365,26 @@ window.onload = function() {
     // 
 
     map.call(zoom);
+
+    // Gemini: Vegetation event listener
+    const nickVegCheckbox = document.getElementById("layer-nick-veg");
+    const vegLegendContainer = document.getElementById("veg-legend");
+
+    nickVegCheckbox.addEventListener("change", function() {
+        if (this.checked) {
+            vegLegendContainer.classList.remove("hidden");
+            nickVegG.selectAll(".veg-poly")
+                .transition()
+                .duration(300)
+                .style("opacity", d => {
+                    const cb = document.querySelector(`.veg-toggle[value="${d.properties.CONSD_POLY}"]`);
+                    return (cb && cb.checked) ? 0.7 : 0;
+                });
+        } else {
+            vegLegendContainer.classList.add("hidden");
+            nickVegG.selectAll(".veg-poly").transition().duration(200).style("opacity", 0);
+        }
+    });
 
     // Catchment event listeners
     const chanCatchCheckbox = document.getElementById("layer-chan-catchment");

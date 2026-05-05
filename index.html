@@ -8,6 +8,14 @@
     <script src="https://unpkg.com/topojson@3"></script>
 </head>
 <body>
+    <div id="splash-screen" class="splash-overlay">
+        <div class="splash-content">
+            <h1>Filler Text</h1>
+            <p>Filler text.</p>
+            <button id="close-splash">Explore Map</button>
+        </div>
+    </div>
+
     <header class="main-header">
         <div class="brand">
             <h1>Effigy Mound Explorer</h1>
@@ -30,8 +38,8 @@
                     <div class="layer-item">
                         <div class="layer-item">
                             <div class="layer-header">
-                                <input type="checkbox" id="layer-nick" checked>
-                                <label for="layer-nick">Vegetation (Nick)</label>
+                                <input type="checkbox" id="layer-nick-veg" checked>
+                                <label for="layer-nick-veg">Vegetation (Nick)</label>
                             </div>
                         </div>
                     </div>
@@ -72,6 +80,10 @@
                     <div id="catchment-legend-items"></div>
                 </div>
 
+                <div id="veg-legend" class="legend-container hidden">
+                <h4>Vegetation Types</h4>
+                <div id="veg-legend-items"></div>
+                </div>
             </div>
         </aside>
 
