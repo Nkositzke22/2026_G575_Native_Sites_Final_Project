@@ -4,9 +4,9 @@ window.onload = function() {
     const width = rect.width;
     const height = rect.height;
 
-
     const splash = document.getElementById("splash-screen");
     const closeBtn = document.getElementById("close-splash");
+    const openBtn = document.getElementById("open-splash");
 
     if (closeBtn) {
         closeBtn.addEventListener("click", function() {
@@ -15,6 +15,18 @@ window.onload = function() {
             setTimeout(() => {
                 splash.style.display = "none";
             }, 500); 
+        });
+    }
+
+    // Re-open logic for the splash screen
+    if (openBtn) {
+        openBtn.addEventListener("click", function() {
+            splash.style.display = "flex";
+            
+            // Tiny delay to ensure display:flex is registered before removing opacity class
+            setTimeout(() => {
+                splash.classList.remove("splash-hidden");
+            }, 10);
         });
     }
 
@@ -115,7 +127,6 @@ window.onload = function() {
         // ==========================================
         
         // [NICK'S CODE - Vegetation]
-        // Gemini: Implementation of filtered vegetation polygons with winding-order fix
         const meshName = Object.keys(vegData.objects)[0]; 
         const topoObject = vegData.objects[meshName];
         let vegFeatures = topojson.feature(vegData, topoObject).features;
@@ -125,7 +136,6 @@ window.onload = function() {
             return d.properties.CONSD_POLY && area < 40000000000;
         });
 
-        // Gemini: Create color scale and legend logic for individual forest types
         const vegTypes = [...new Set(realVegetation.map(d => d.properties.CONSD_POLY))];
         const vegColorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(vegTypes);
 
@@ -139,7 +149,6 @@ window.onload = function() {
             .style("stroke", "none")
             .style("opacity", 0);
 
-        // Populate Veg Legend
         const vegLegendItemsContainer = d3.select("#veg-legend-items");
         vegLegendItemsContainer.selectAll(".legend-item")
             .data(vegTypes)
@@ -154,7 +163,6 @@ window.onload = function() {
                 <input type="checkbox" class="veg-toggle" value="${d}" checked>
             `);
 
-        // Veg individual toggle listener
         d3.selectAll(".veg-toggle").on("change", function() {
             const selectedType = this.value;
             const isChecked = this.checked;
@@ -366,7 +374,7 @@ window.onload = function() {
 
     map.call(zoom);
 
-    // Gemini: Vegetation event listener
+
     const nickVegCheckbox = document.getElementById("layer-nick-veg");
     const vegLegendContainer = document.getElementById("veg-legend");
 
