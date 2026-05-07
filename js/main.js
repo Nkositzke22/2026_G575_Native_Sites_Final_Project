@@ -602,8 +602,10 @@ const noteModal = document.getElementById("custom-note-modal");
     });
 
     paramCheckbox.addEventListener("change", function () {
-
         paramGroup.classList.toggle("active", this.checked);
+
+        // THIS IS THE MISSING LINE: Show or hide the dropdown based on the checkbox
+        paramSelect.style.display = this.checked ? "block" : "none";
 
         if (!this.checked) {
             paramSelect.value = "";
