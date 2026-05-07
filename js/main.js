@@ -373,6 +373,13 @@ window.onload = function() {
     // 
 
     map.call(zoom);
+    d3.select("#zoom-in").on("click", function() {
+        map.transition().duration(300).call(zoom.scaleBy, 1.5);
+    });
+
+    d3.select("#zoom-out").on("click", function() {
+        map.transition().duration(300).call(zoom.scaleBy, 0.667);
+    });
 
 
     const nickVegCheckbox = document.getElementById("layer-nick-veg");
