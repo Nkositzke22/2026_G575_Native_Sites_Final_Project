@@ -288,3 +288,128 @@ body { display: flex; flex-direction: column; }
 .zoom-btn:active {
     transform: scale(0.95);
 }
+
+.note-btn {
+    background-color: #34495e;
+    color: white;
+    border: 1px solid #5d6d7e;
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.note-btn:hover { background-color: #3498db; }
+.note-btn.active { background-color: #e74c3c; border-color: #c0392b; }
+
+.map-note-mode { cursor: crosshair !important; }
+
+.note-marker {
+    fill: #f1c40f;
+    stroke: #2c3e50;
+    stroke-width: 1px;
+    cursor: pointer;
+    transition: fill 0.2s;
+}
+
+.note-marker:hover { fill: #f39c12; }
+
+.sidebar-note-item {
+    background: rgba(0,0,0,0.2);
+    padding: 8px 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 0.85em;
+    border-left: 3px solid #f1c40f;
+    word-wrap: break-word;
+    color: #ecf0f1;
+}
+
+.delete-note-btn {
+    background: none;
+    border: none;
+    color: #bdc3c7;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0 0 0 10px;
+    font-size: 1.1em;
+    transition: color 0.2s;
+}
+
+.delete-note-btn:hover {
+    color: #e74c3c;
+}
+
+.note-marker.highlighted {
+    fill: #e67e22;
+    stroke-width: 2px !important;
+}
+
+.sidebar-note-item.highlighted {
+    background: rgba(241, 196, 15, 0.25);
+    border-left-color: #e67e22;
+}
+
+/* CUSTOM NOTE MODAL STYLES */
+.note-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(26, 37, 47, 0.8); /* Dark transparent background */
+    z-index: 10000;
+    display: flex; justify-content: center; align-items: center;
+}
+
+.note-modal-content {
+    background: #2c3e50; 
+    color: white; 
+    padding: 25px;
+    border-radius: 8px; 
+    width: 320px; 
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    border-top: 4px solid #27ae60;
+}
+
+.note-modal-content h3 { 
+    margin-top: 0; 
+    font-size: 1.1em; 
+    margin-bottom: 20px; 
+    color: #ecf0f1;
+}
+
+#custom-note-input {
+    width: 90%; 
+    padding: 10px; 
+    margin-bottom: 20px;
+    border-radius: 4px; 
+    border: 1px solid #7f8c8d;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1em;
+}
+
+#custom-note-input:focus {
+    outline: none;
+    border-color: #27ae60;
+}
+
+.note-modal-buttons { 
+    display: flex; 
+    justify-content: center; 
+    gap: 15px; 
+}
+
+.submit-btn { 
+    background: #27ae60; color: white; border: none; 
+    padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;
+}
+
+.submit-btn:hover { background: #2ecc71; }
+
+.cancel-btn { 
+    background: #e74c3c; color: white; border: none; 
+    padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;
+}
+
+.cancel-btn:hover { background: #c0392b; }

@@ -34,6 +34,14 @@
                 </div>
             </div>
 
+            <div class="card" id="notes-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 10px;">
+                    <h3 style="margin: 0; border: none; padding: 0;">Session Notes</h3>
+                    <button id="toggle-note-mode" class="note-btn" title="Toggle Note Mode">📝 Add</button>
+                </div>
+                <div id="notes-list" class="hint">No notes added yet.</div>
+            </div>
+
             <div class="card">
                 <h3>Analysis Layers</h3>
                 <div class="layer-control">
@@ -107,6 +115,17 @@
     </div>
 
     <div id="pie-tooltip" class="pie-tooltip hidden"></div>
+
+    <div id="custom-note-modal" class="note-modal-overlay" style="display: none;">
+        <div class="note-modal-content">
+            <h3>Enter your note for this location:</h3>
+            <input type="text" id="custom-note-input" placeholder="Type here..." autocomplete="off" />
+            <div class="note-modal-buttons">
+                <button id="submit-note-btn" class="submit-btn">OK</button>
+                <button id="cancel-note-btn" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/main.js"></script>
 </body>

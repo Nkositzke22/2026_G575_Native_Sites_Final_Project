@@ -72,6 +72,8 @@ window.onload = function() {
     const chanCatchG = map.append("g").attr("id", "chanodom-catchment");       
     const paramMoundG = map.append("g").attr("id", "param-mounds"); // Render above all other layers
 
+    const notesG = map.append("g").attr("id", "notes-layer");
+
     const promises = [
         d3.json("data/mound_sites_WI.json"),
         d3.json("data/wisconsin.topojson"),
@@ -369,6 +371,8 @@ window.onload = function() {
             paramMoundG.selectAll(".mounds")
                 .attr("r", Math.max(1, 2 / Math.pow(transform.k, 1))) // This handles the scaling of the site symbols
                 // .style("stroke-width", 0.5 / transform.k);
+            
+            notesG.selectAll(".note-marker").attr("r", Math.max(2, 5 / transform.k));
         });
     // 
 
@@ -381,6 +385,148 @@ window.onload = function() {
         map.transition().duration(300).call(zoom.scaleBy, 0.667);
     });
 
+    let isNoteMode = false;
+    const noteBtn = document.getElementById("toggle-note-mode");
+    const mapContainerEl = document.getElementById("map-container");
+    const tooltip = d3.select("#pie-tooltip");
+
+    noteBtn.addEventListener("click", function() {
+        isNoteMode = !isNoteMode;
+        if (isNoteMode) {
+            this.classList.add("active");
+            this.textContent = "Cancel Note";
+            mapContainerEl.classList.add("map-note-mode");
+        } else {
+            this.classList.remove("active");
+            this.textContent = "📝 Add";
+            mapContainerEl.classList.remove("map-note-mode");
+        }
+    });
+
+const noteModal = document.getElementById("custom-note-modal");
+    const noteInput = document.getElementById("custom-note-input");
+    const submitNoteBtn = document.getElementById("submit-note-btn");
+    const cancelNoteBtn = document.getElementById("cancel-note-btn");
+
+    function closeAndResetNoteMode() {
+        noteModal.style.display = "none";
+        isNoteMode = false;
+        noteBtn.classList.remove("active");
+        noteBtn.textContent = "📝 Add";
+        mapContainerEl.classList.remove("map-note-mode");
+    }
+
+    map.on("click", function(event) {
+        if (!isNoteMode) return;
+
+        // Calculate correct coordinates based on zoom level immediately
+        const transform = d3.zoomTransform(map.node());
+        const [groupX, groupY] = transform.invert(d3.pointer(event, map.node()));
+        const currentScale = transform.k;
+        const currentRadius = Math.max(2, 5 / currentScale);
+
+        // Show custom modal instead of the browser prompt
+        noteModal.style.display = "flex";
+        noteInput.value = "";
+        noteInput.focus();
+
+        // --- Handle OK Button ---
+        submitNoteBtn.onclick = function() {
+            const noteText = noteInput.value.trim();
+            
+            if (!noteText) {
+                closeAndResetNoteMode();
+                return;
+            }
+
+            noteModal.style.display = "none"; // Hide modal
+
+            // GENERATE UNIQUE ID
+            const noteId = Date.now();
+
+            // Drop marker
+            notesG.append("circle")
+                .attr("id", "marker-" + noteId)
+                .attr("class", "note-marker")
+                .attr("cx", groupX)
+                .attr("cy", groupY)
+                .attr("r", currentRadius)
+                .on("mouseover", function(e) {
+                    d3.select(this).classed("highlighted", true);
+                    const sidebarItem = document.getElementById("item-" + noteId);
+                    if (sidebarItem) sidebarItem.classList.add("highlighted");
+
+                    tooltip.classed("hidden", false).text(noteText)
+                        .style("left", (e.pageX + 15) + "px")
+                        .style("top", (e.pageY + 15) + "px");
+                })
+                .on("mousemove", function(e) {
+                    tooltip.style("left", (e.pageX + 15) + "px")
+                           .style("top", (e.pageY + 15) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select(this).classed("highlighted", false);
+                    const sidebarItem = document.getElementById("item-" + noteId);
+                    if (sidebarItem) sidebarItem.classList.remove("highlighted");
+                    tooltip.classed("hidden", true);
+                });
+
+            // Add to sidebar
+            const list = document.getElementById("notes-list");
+            if (list.classList.contains("hint")) {
+                list.innerHTML = "";
+                list.classList.remove("hint");
+            }
+            
+            const item = document.createElement("div");
+            item.className = "sidebar-note-item";
+            item.id = "item-" + noteId;
+
+            item.style.display = "flex";
+            item.style.justifyContent = "space-between";
+            item.style.alignItems = "flex-start";
+            item.style.transition = "all 0.2s";
+
+            item.innerHTML = `
+                <span style="flex: 1;">${noteText}</span>
+                <button class="delete-note-btn" title="Delete Note">✖</button>
+            `;
+
+            // Sidebar hover sync
+            item.addEventListener("mouseenter", function() {
+                this.classList.add("highlighted");
+                d3.select("#marker-" + noteId).classed("highlighted", true);
+            });
+            item.addEventListener("mouseleave", function() {
+                this.classList.remove("highlighted");
+                d3.select("#marker-" + noteId).classed("highlighted", false);
+            });
+
+            // Delete logic
+            item.querySelector(".delete-note-btn").addEventListener("click", function() {
+                item.remove(); 
+                d3.select("#marker-" + noteId).remove(); 
+                if (list.children.length === 0) {
+                    list.classList.add("hint");
+                    list.innerHTML = "No notes added yet.";
+                }
+            });
+
+            list.appendChild(item);
+            closeAndResetNoteMode();
+        };
+
+        // --- Handle Cancel Button ---
+        cancelNoteBtn.onclick = function() {
+            closeAndResetNoteMode();
+        };
+
+        // --- Handle Enter Key ---
+        noteInput.onkeydown = function(e) {
+            if (e.key === "Enter") submitNoteBtn.click();
+            if (e.key === "Escape") cancelNoteBtn.click();
+        };
+    });
 
     const nickVegCheckbox = document.getElementById("layer-nick-veg");
     const vegLegendContainer = document.getElementById("veg-legend");
