@@ -39,6 +39,25 @@ window.onload = function() {
 
     paramSelect.style.display = paramCheckbox.checked ? "block" : "none";
 
+    const speciesColor = d3.scaleOrdinal()
+    .domain([
+        "Bird",
+        "Fork Tailed Bird",
+        "Goose",
+        "Bear",
+        "Panther",
+        "Long Tailed Quadruped",
+        "Short Tailed Quadruped",
+        "Unknown Quadruped",
+        "Water Spirit",
+        "Long Tailed Turtle",
+        "Short Tailed Turtle",
+        "No Tailed Turtle",
+        "Unknown Turtle",
+        "Mink"
+    ])
+    .range(d3.schemeTableau10);
+
     // initial state
     if (paramCheckbox.checked) {
         paramGroup.classList.add("active");
@@ -443,9 +462,13 @@ window.onload = function() {
             .append("g")
             .attr("transform", `translate(${width / 2},${height / 2})`);
 
+        /*
         const color = d3.scaleOrdinal()
             .domain(data.map(d => d.key))
             .range(d3.schemeTableau10);
+        */
+
+        const color = speciesColor;
 
         const pie = d3.pie().value(d => d.value);
         const arc = d3.arc().innerRadius(0).outerRadius(radius);
