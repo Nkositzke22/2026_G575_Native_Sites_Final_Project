@@ -165,6 +165,18 @@ window.onload = function() {
                 updateUI(d.properties, this)
             });
 
+
+        // Sets the pannable extent to just mound site data
+        const bbox = paramMoundG.node().getBBox();
+        
+        const paddingX = 500;
+        const paddingY = 500;
+
+        zoom.translateExtent([
+            [bbox.x - paddingX, bbox.y - paddingY],
+            [bbox.x + bbox.width + paddingX, bbox.y + bbox.height + paddingY]
+        ]);
+
         // ==========================================
         // TEAM DATA IMPLEMENTATION START
         // ==========================================
