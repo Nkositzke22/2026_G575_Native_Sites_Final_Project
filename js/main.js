@@ -8,22 +8,24 @@ window.onload = function() {
     const closeBtn = document.getElementById("close-splash");
     const openBtn = document.getElementById("open-splash");
 
+    //Closes the splash screen with a timed fade-out
     if (closeBtn) {
         closeBtn.addEventListener("click", function() {
             splash.classList.add("splash-hidden");
             
+            // 500 millisecond delay
             setTimeout(() => {
                 splash.style.display = "none";
             }, 500); 
         });
     }
 
-    // Re-open logic for the splash screen
+    //Re-opens the splash screen
     if (openBtn) {
         openBtn.addEventListener("click", function() {
             splash.style.display = "flex";
             
-            // Tiny delay to ensure display:flex is registered before removing opacity class
+  
             setTimeout(() => {
                 splash.classList.remove("splash-hidden");
             }, 10);
@@ -39,6 +41,7 @@ window.onload = function() {
 
     paramSelect.style.display = paramCheckbox.checked ? "block" : "none";
 
+    //Sets colors for different effigy species
     const speciesColor = d3.scaleOrdinal()
     .domain([
         "Bird",
@@ -69,9 +72,10 @@ window.onload = function() {
         .attr("height", height)
         .attr("viewBox", `0 0 ${width} ${height}`);
 
-    // Need this for the vegetation layer to show properly
+    //Clips veg layer to state borders
     const defs = map.append("defs"); 
 
+    //Sets projection for veg layer
     const projection = d3.geoAlbers()
         .center([0, 44.75])
         .rotate([90, 0, 0])
@@ -87,7 +91,6 @@ window.onload = function() {
     const subBasinG = map.append("g").attr("id", "subbasin-layer");
     const chanClanG = map.append("g").attr("id", "chanodom-clan"); 
     
-    // Veg layer fix
     const nickVegG = map.append("g")
         .attr("id", "nick-vegetation")
         .attr("clip-path", "url(#wi-clip)"); 
@@ -123,13 +126,14 @@ window.onload = function() {
         const objectName = Object.keys(topoData.objects)[0];
         const wisconsin = topojson.feature(topoData, topoData.objects[objectName]);
 
-        // Veg layer workaround
+        //Veg layer workaround
         defs.append("clipPath")
             .attr("id", "wi-clip")
             .append("path")
             .datum(wisconsin)
             .attr("d", path);
 
+        //Sets visual state boundary
         boundaryG.append("path")
             .datum(wisconsin)
             .attr("class", "wi-boundary")
@@ -182,18 +186,22 @@ window.onload = function() {
         // ==========================================
         
         // [NICK'S CODE - Vegetation]
+        //Grabs first object from TopoJSON
         const meshName = Object.keys(vegData.objects)[0]; 
         const topoObject = vegData.objects[meshName];
         let vegFeatures = topojson.feature(vegData, topoObject).features;
 
+        //Filters out null records
         const realVegetation = vegFeatures.filter(d => {
             const area = d.properties.Shape_Area;
             return d.properties.CONSD_POLY
         });
 
+        //Identifies the vegetation categories and establishes a color scale
         const vegTypes = [...new Set(realVegetation.map(d => d.properties.CONSD_POLY))];
         const vegColorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(vegTypes);
 
+        //Renders forest patches
         nickVegG.selectAll(".veg-poly")
             .data(realVegetation)
             .enter()
@@ -205,6 +213,7 @@ window.onload = function() {
             .style("opacity", 0)
             .style("pointer-events", "none");
 
+        //Legend generation
         const vegLegendItemsContainer = d3.select("#veg-legend-items");
         vegLegendItemsContainer.selectAll(".legend-item")
             .data(vegTypes)
@@ -219,6 +228,7 @@ window.onload = function() {
                 <input type="checkbox" class="veg-toggle" value="${d}" checked>
             `);
 
+        //Toggle logic for specific vegetation patches
         d3.selectAll(".veg-toggle").on("change", function() {
             const selectedType = this.value;
             const isChecked = this.checked;
