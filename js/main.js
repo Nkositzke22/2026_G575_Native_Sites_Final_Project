@@ -34,6 +34,9 @@ window.onload = function() {
     const paramGroup = document.querySelector(".layer-param-group");
     const paramSelect = document.getElementById("param-aggregate-select");
 
+    let aggregationLayers;
+    let activeAggregation = paramSelect.value || "huc8";
+
     paramSelect.style.display = paramCheckbox.checked ? "block" : "none";
 
     // initial state
@@ -78,6 +81,8 @@ window.onload = function() {
         d3.json("data/mound_sites_WI.json"),
         d3.json("data/wisconsin.topojson"),
         d3.json("data/sub-basin-mound-aggregate.geojson"),
+        d3.json("data/watershed-mound-aggregate.geojson"),
+        d3.json("data/sub-watershed-mound-aggregate.geojson"),
         d3.json("data/clanTerritories.topojson"),
         d3.json("data/catchmentAreas2.geojson"),
         d3.json("data/wi_presettlement_veg.json") 
@@ -87,9 +92,11 @@ window.onload = function() {
         const moundData = data[0];
         const topoData = data[1];
         const subbasinData = data[2];
-        const clanTerritoriesData = data[3];
-        const catchmentAreasData = data[4];
-        const vegData = data[5]; 
+        const watershedData = data[3];
+        const subWatershedData = data[4];
+        const clanTerritoriesData = data[5];
+        const catchmentAreasData = data[6];
+        const vegData = data[7]; 
 
         const objectName = Object.keys(topoData.objects)[0];
         const wisconsin = topojson.feature(topoData, topoData.objects[objectName]);
@@ -149,7 +156,8 @@ window.onload = function() {
             .attr("d", path)
             .style("fill", d => vegColorScale(d.properties.CONSD_POLY))
             .style("stroke", "none")
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .style("pointer-events", "none");
 
         const vegLegendItemsContainer = d3.select("#veg-legend-items");
         vegLegendItemsContainer.selectAll(".legend-item")
@@ -204,7 +212,8 @@ window.onload = function() {
                 const color = catchmentColorScale(val);
                 return color ? d3.color(color).darker(1) : "#999";
             })            .style("stroke-width", 1.5)
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .style("pointer-events", "none");
 
         // Catchment legend
         const fixedTimes = [14400, 86400];
@@ -268,7 +277,8 @@ window.onload = function() {
                 return type === "core area" ? 0 : 1;
             })
             
-            .style("opacity", 0); // Initially hidden
+            .style("opacity", 0)
+            .style("pointer-events", "none"); // Initially hidden
 
         // Clan legend event listener & random color palette
         const uniqueClans = [...new Set(clanFeatures.features.map(d => d.properties.Clan || "Unknown"))];
@@ -302,6 +312,14 @@ window.onload = function() {
 
         // [PARAM'S CODE - Proportions Aggregation]
 
+        aggregationLayers = {
+            huc8: { data: subbasinData, labelField: "HUC8_NAME", opacity: 0.6 },
+            huc10: { data: watershedData, labelField: "WSHED_NAME", opacity: 0.6 },
+            huc12: { data: subWatershedData, labelField: "HUC12_NAME", opacity: 0.6 }
+        };
+
+        /*
+
         subBasinG.selectAll(".subbasin")
             .data(subbasinData.features)
             .enter()
@@ -318,10 +336,143 @@ window.onload = function() {
 
         updateSubbasinVisibility();
 
+        */
+
+        activeAggregation = paramSelect.value || "huc8";
+        renderAggregationLayer(activeAggregation);
+        updateAggregationVisibility(activeAggregation);
+
         // ==========================================
 
         d3.select("#stat-count").text(moundData.features.length);
     });
+
+    function renderAggregationLayer(key) {
+        const layer = aggregationLayers[key];
+        if (!layer) return;
+
+        const features = layer.data.features;
+
+        const sel = subBasinG.selectAll(".subbasin")
+            .data(features, d => d.properties[layer.labelField]);
+
+        sel.enter()
+            .append("path")
+            .attr("class", "subbasin")
+            .attr("d", path)
+            .style("fill", "#3498db")
+            .style("stroke", "#1f2d3a")
+            .style("stroke-width", 0.5)
+            .style("opacity", 0.3)
+            .on("click", function(event, d) {
+                showPopup2(event, d.properties, layer.labelField);
+            });
+
+        sel.attr("d", path);
+
+        sel.exit().remove();
+    }
+
+    function showPopup2(event, props, labelField) {
+        const popup = document.getElementById("popup");
+        const title = document.getElementById("popup-title");
+        const container = d3.select("#popup-chart");
+        const tooltip = d3.select("#pie-tooltip");
+
+        popup.classList.remove("hidden");
+
+        popup.style.left = (event.pageX + 15) + "px";
+        popup.style.top = (event.pageY + 15) + "px";
+
+        title.textContent = props[labelField] || "Unknown Area";
+
+        container.selectAll("*").remove();
+
+        const species = [
+            "Bird",
+            "Fork Tailed Bird",
+            "Goose",
+            "Bear",
+            "Panther",
+            "Long Tailed Quadruped",
+            "Short Tailed Quadruped",
+            "Unknown Quadruped",
+            "Water Spirit",
+            "Long Tailed Turtle",
+            "Short Tailed Turtle",
+            "No Tailed Turtle",
+            "Unknown Turtle",
+            "Mink"
+        ];
+
+        const data = species
+            .map(k => ({ key: k, value: +props[k] || 0 }))
+            .filter(d => d.value > 0);
+
+        const width = 240;
+        const height = 240;
+        const radius = Math.min(width, height) / 2;
+
+        const svg = container.append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width / 2},${height / 2})`);
+
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.key))
+            .range(d3.schemeTableau10);
+
+        const pie = d3.pie().value(d => d.value);
+        const arc = d3.arc().innerRadius(0).outerRadius(radius);
+
+        svg.selectAll("path")
+            .data(pie(data))
+            .enter()
+            .append("path")
+            .attr("d", arc)
+            .attr("fill", d => color(d.data.key))
+            .attr("stroke", "#2c3e50")
+            .style("stroke-width", "1px")
+            .on("mouseover", function(event, d) {
+                d3.select(this)
+                    .style("opacity", 0.7)
+                    .style("stroke-width", "2px");
+
+                tooltip
+                    .classed("hidden", false)
+                    .text(`${d.data.key}: ${d.data.value}`);
+            })
+            .on("mousemove", function(event) {
+                tooltip
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY + 10) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .style("opacity", 1)
+                    .style("stroke-width", "1px");
+
+                tooltip.classed("hidden", true);
+            });
+    }
+
+    function updateAggregationVisibility(key) {
+        const layer = aggregationLayers[key];
+
+        if (!paramCheckbox.checked || !layer) {
+            subBasinG.selectAll(".subbasin")
+                .transition()
+                .duration(200)
+                .style("opacity", 0);
+            return;
+        }
+
+        subBasinG.selectAll(".subbasin")
+            .transition()
+            .duration(300)
+            .style("opacity", layer.opacity);
+    }
 
     function updateUI(p, element) {
         const animalKeys = [
@@ -532,19 +683,22 @@ const noteModal = document.getElementById("custom-note-modal");
     const vegLegendContainer = document.getElementById("veg-legend");
 
     nickVegCheckbox.addEventListener("change", function() {
-        if (this.checked) {
+        const isActive = this.checked;
+
+        if (isActive) {
             vegLegendContainer.classList.remove("hidden");
-            nickVegG.selectAll(".veg-poly")
-                .transition()
-                .duration(300)
-                .style("opacity", d => {
-                    const cb = document.querySelector(`.veg-toggle[value="${d.properties.CONSD_POLY}"]`);
-                    return (cb && cb.checked) ? 0.7 : 0;
-                });
         } else {
             vegLegendContainer.classList.add("hidden");
-            nickVegG.selectAll(".veg-poly").transition().duration(200).style("opacity", 0);
         }
+
+        nickVegG.selectAll(".veg-poly")
+            .transition()
+            .duration(300)
+            .style("opacity", d => {
+                const cb = document.querySelector(`.veg-toggle[value="${d.properties.CONSD_POLY}"]`);
+                return (isActive && cb && cb.checked) ? 0.7 : 0;
+            })
+            .style("pointer-events", isActive ? "auto" : "none");
     });
 
     // Catchment event listeners
@@ -559,13 +713,19 @@ const noteModal = document.getElementById("custom-note-modal");
             chanCatchG.selectAll(".catchment-feature")
                 .transition()
                 .duration(300)
-                .style("opacity", 0.5);
+                .style("opacity", 0.5)
+                .style("pointer-events", function() {
+                    return this.checked ? "auto" : "none";
+                });
         } else {
             // Turns off all off catchment features
             chanCatchG.selectAll(".catchment-feature")
                 .transition()
                 .duration(200)
-                .style("opacity", 0);
+                .style("opacity", 0)
+                .style("pointer-events", function() {
+                    return this.checked ? "auto" : "none";
+                });
             
             catchLegendContainer.classList.add("hidden");
         }
@@ -588,13 +748,18 @@ const noteModal = document.getElementById("custom-note-modal");
                     const clanName = d.properties.Clan || "Unknown";
                     const checkbox = document.querySelector(`.clan-toggle[value="${clanName}"]`);
                     return (checkbox && checkbox.checked) ? 0.6 : 0;
+                }).style("pointer-events", function() {
+                    return this.checked ? "auto" : "none";
                 });
         } else {
             // Hides all clan features
             chanClanG.selectAll(".clan-feature")
                 .transition()
                 .duration(200)
-                .style("opacity", 0.0);
+                .style("opacity", 0.0)
+                .style("pointer-events", function() {
+                    return this.checked ? "auto" : "none";
+                });
             
             // Hides legend
             clanLegendContainer.classList.add("hidden");
@@ -604,7 +769,6 @@ const noteModal = document.getElementById("custom-note-modal");
     paramCheckbox.addEventListener("change", function () {
         paramGroup.classList.toggle("active", this.checked);
 
-        // THIS IS THE MISSING LINE: Show or hide the dropdown based on the checkbox
         paramSelect.style.display = this.checked ? "block" : "none";
 
         if (!this.checked) {
@@ -614,8 +778,19 @@ const noteModal = document.getElementById("custom-note-modal");
         updateSubbasinVisibility();
     });
 
+    /*
+
     paramSelect.addEventListener("change", function () {
         updateSubbasinVisibility();
+    });
+
+    */
+
+    paramSelect.addEventListener("change", function () {
+        activeAggregation = this.value;
+
+        renderAggregationLayer(activeAggregation);
+        updateAggregationVisibility(activeAggregation);
     });
 
     function updateSubbasinVisibility() {
