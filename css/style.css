@@ -413,3 +413,29 @@ body { display: flex; flex-direction: column; }
 }
 
 .cancel-btn:hover { background: #c0392b; }
+
+/* GEMINI: Added to handle long citation text in splash screen */
+.citation-container h3 {
+    color: #27ae60;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.citation-container h4 {
+    color: #bdc3c7;
+    margin: 10px 0 5px 0;
+    font-size: 0.95em;
+    text-transform: uppercase;
+}
+
+.citation-container p {
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+/* Ensure the splash content doesn't exceed screen height */
+.splash-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
