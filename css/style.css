@@ -37,6 +37,7 @@ body { display: flex; flex-direction: column; }
 .sidebar::-webkit-scrollbar {
     display: none;
 }
+
 /* SCROLLBAR CHANGE READ ABOVE */
 
 .card {
@@ -182,7 +183,7 @@ body { display: flex; flex-direction: column; }
     align-items: center;
 }
 
-.clan-toggle {
+.checkbox-style, .veg-toggle {
     margin: 0;
     cursor: pointer;
     accent-color: #27ae60;
@@ -195,6 +196,8 @@ body { display: flex; flex-direction: column; }
     border-radius: 3px;
     border: 1px solid rgba(255,255,255,0.3);
 }
+
+/* SPLASH SCREEN STYLES */
 
 .splash-overlay {
     position: fixed;
@@ -254,6 +257,30 @@ body { display: flex; flex-direction: column; }
     background: #3498db;
 }
 
+/* Ensure the splash content doesn't exceed screen height */
+.splash-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* This should fix the splash text "?" button */
+/* from aligning itself beneath the title */
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand h1 {
+    margin: 0;
+}
+
+/* SPLASH SCREEN STYLES */
+
+
+/* MAP INTERACTION STYLES */
+
 .zoom-controls {
     position: absolute;
     bottom: 30px;
@@ -289,6 +316,8 @@ body { display: flex; flex-direction: column; }
     transform: scale(0.95);
 }
 
+/* NOTE STYLES */
+
 .note-btn {
     background-color: #34495e;
     color: white;
@@ -299,6 +328,10 @@ body { display: flex; flex-direction: column; }
     font-size: 0.85em;
     font-weight: bold;
     transition: background 0.2s;
+
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
 }
 
 .note-btn:hover { background-color: #3498db; }
@@ -353,9 +386,10 @@ body { display: flex; flex-direction: column; }
 }
 
 /* CUSTOM NOTE MODAL STYLES */
+
 .note-modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(26, 37, 47, 0.8); /* Dark transparent background */
+    background: rgba(26, 37, 47, 0.8);
     z-index: 10000;
     display: flex; justify-content: center; align-items: center;
 }
@@ -414,6 +448,8 @@ body { display: flex; flex-direction: column; }
 
 .cancel-btn:hover { background: #c0392b; }
 
+/* CITATION STYLES */
+
 /* GEMINI: Added to handle long citation text in splash screen */
 .citation-container h3 {
     color: #27ae60;
@@ -434,8 +470,27 @@ body { display: flex; flex-direction: column; }
     line-height: 1.4;
 }
 
-/* Ensure the splash content doesn't exceed screen height */
-.splash-content {
-    max-height: 90vh;
-    overflow-y: auto;
+/* CITATION STYLES */
+
+/* STYLING FOR PROPORTIONAL AGGREGATES COMBOBOX */
+
+#param-aggregate-select {
+    background-color: #1a252f;
+    color: #ecf0f1;
+    border: 1px solid #7f8c8d;
+    border-radius: 4px;
 }
+
+/* Handles green combobox highlight */
+#param-aggregate-select:focus {
+    outline: none;
+    border-color: #27ae60;
+}
+
+/* Combobox dropdown list */
+#param-aggregate-select option {
+    background-color: #2c3e50; /* Matches the main sidebar background */
+    color: white;
+}
+
+/* STYLING FOR PROPORTIONAL AGGREGATES COMBOBOX */

@@ -82,6 +82,7 @@ window.onload = function() {
     const path = d3.geoPath().projection(projection);
 
     // TEAM LAYERS
+    const otherStatesG = map.append("g").attr("id", "other-states-layer");
     const boundaryG = map.append("g").attr("id", "wi-boundary-layer");
     const subBasinG = map.append("g").attr("id", "subbasin-layer");
     const chanClanG = map.append("g").attr("id", "chanodom-clan"); 
@@ -97,14 +98,15 @@ window.onload = function() {
     const notesG = map.append("g").attr("id", "notes-layer");
 
     const promises = [
-        d3.json("data/mound_sites_WI.json"),
+        d3.json("data/mound_sites2.json"),
         d3.json("data/wisconsin.topojson"),
         d3.json("data/sub-basin-mound-aggregate.geojson"),
         d3.json("data/watershed-mound-aggregate.geojson"),
         d3.json("data/sub-watershed-mound-aggregate.geojson"),
         d3.json("data/clanTerritories.topojson"),
         d3.json("data/catchmentAreas2.geojson"),
-        d3.json("data/wi_presettlement_veg2.topojson") 
+        d3.json("data/wi_presettlement_veg2.topojson"),
+        d3.json("data/other_states.geojson")
     ];
 
     Promise.all(promises).then(function(data) {
@@ -116,6 +118,7 @@ window.onload = function() {
         const clanTerritoriesData = data[5];
         const catchmentAreasData = data[6];
         const vegData = data[7]; 
+        const otherStatesData = data[8];
 
         const objectName = Object.keys(topoData.objects)[0];
         const wisconsin = topojson.feature(topoData, topoData.objects[objectName]);
@@ -131,6 +134,17 @@ window.onload = function() {
             .datum(wisconsin)
             .attr("class", "wi-boundary")
             .attr("d", path);
+
+        // Non-WI state boundaries & fills
+        otherStatesG.selectAll(".other-state")
+            .data(otherStatesData.features)
+            .enter()
+            .append("path")
+            .attr("class", "other-state")
+            .attr("d", path)
+            .style("fill", "#e0e0e0")
+            .style("stroke", "#bdc3c7")
+            .style("stroke-width", "1px");
 
         paramMoundG.selectAll(".mounds")
             .data(moundData.features)
@@ -314,11 +328,11 @@ window.onload = function() {
                     <div class="legend-color" style="background-color: ${clanColorScale(d)}"></div>
                     <span>${d.replace(/_/g, ' ')}</span>
                 </div>
-                <input type="checkbox" class="clan-toggle" value="${d}" checked>
+                <input type="checkbox" class="checkbox-style" value="${d}" checked>
             `);
 
         // Clan legend symbols event listener
-        d3.selectAll(".clan-toggle").on("change", function() {
+        d3.selectAll(".checkbox-style").on("change", function() {
             const selectedClan = this.value;
             const isChecked = this.checked;
 
@@ -515,7 +529,7 @@ window.onload = function() {
 
         if (!paramCheckbox.checked || !layer) {
             subBasinG.selectAll(".subbasin")
-                .style("pointer-events", "none")
+                // .style("pointer-events", "none")
                 .transition()
                 .duration(200)
                 .style("opacity", 0)
@@ -709,7 +723,7 @@ const noteModal = document.getElementById("custom-note-modal");
             item.style.transition = "all 0.2s";
 
             item.innerHTML = `
-                <span style="flex: 1;">${noteText}</span>
+                <span style="flex: 1; min-width: 0; overflow-wrap: break-word; padding-right: 10px;">${noteText}</span>
                 <button class="delete-note-btn" title="Delete Note">✖</button>
             `;
 
@@ -816,7 +830,7 @@ const noteModal = document.getElementById("custom-note-modal");
                 .duration(300)
                 .style("opacity", function(d) {
                     const clanName = d.properties.Clan || "Unknown";
-                    const checkbox = document.querySelector(`.clan-toggle[value="${clanName}"]`);
+                    const checkbox = document.querySelector(`.checkbox-style[value="${clanName}"]`);
                     return (checkbox && checkbox.checked) ? 0.6 : 0;
                 }).style("pointer-events", function() {
                     return this.checked ? "auto" : "none";
@@ -846,7 +860,7 @@ const noteModal = document.getElementById("custom-note-modal");
             activeAggregation = null;
 
             subBasinG.selectAll(".subbasin")
-                .style("pointer-events", "none")
+                // .style("pointer-events", "none")
                 .transition()
                 .duration(200)
                     .style("opacity", 0)
@@ -875,7 +889,7 @@ const noteModal = document.getElementById("custom-note-modal");
 
         if (!paramCheckbox.checked || !activeAggregation) {
             subBasinG.selectAll(".subbasin")
-                .style("pointer-events", "none")
+                // .style("pointer-events", "none")
                 .transition()
                 .duration(200)
                 .style("opacity", 0)
