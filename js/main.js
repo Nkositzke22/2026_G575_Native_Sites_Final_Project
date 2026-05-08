@@ -35,7 +35,7 @@ window.onload = function() {
     const paramSelect = document.getElementById("param-aggregate-select");
 
     let aggregationLayers;
-    let activeAggregation = paramSelect.value || "huc8";
+    activeAggregation = null;
 
     paramSelect.style.display = paramCheckbox.checked ? "block" : "none";
 
@@ -338,9 +338,12 @@ window.onload = function() {
 
         */
 
-        activeAggregation = paramSelect.value || "huc8";
-        renderAggregationLayer(activeAggregation);
-        updateAggregationVisibility(activeAggregation);
+        activeAggregation = paramSelect.value || null;
+
+        if (paramCheckbox.checked && activeAggregation) {
+            renderAggregationLayer(activeAggregation);
+            updateAggregationVisibility(activeAggregation);
+        }
 
         // ==========================================
 
@@ -348,6 +351,10 @@ window.onload = function() {
     });
 
     function renderAggregationLayer(key) {
+        if (!paramCheckbox.checked || !key || !aggregationLayers[key]) {
+            subBasinG.selectAll(".subbasin").remove();
+            return;
+        }
         const layer = aggregationLayers[key];
         if (!layer) return;
 
@@ -364,8 +371,25 @@ window.onload = function() {
             .style("stroke", "#1f2d3a")
             .style("stroke-width", 0.5)
             .style("opacity", 0.3)
+            .style("cursor", "pointer")
             .on("click", function(event, d) {
                 showPopup2(event, d.properties, layer.labelField);
+            })
+            .on("mouseover", function(event) {
+                d3.select(this)
+                    .transition()
+                    .duration(120)
+                    .style("opacity", 0.6)
+                    .style("stroke", "#f1c40f")
+                    .style("stroke-width", 1.5);
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(120)
+                    .style("opacity", 0.6)
+                    .style("stroke", "#1f2d3a")
+                    .style("stroke-width", 0.5);
             });
 
         sel.attr("d", path);
@@ -773,11 +797,23 @@ const noteModal = document.getElementById("custom-note-modal");
 
         if (!this.checked) {
             paramSelect.value = "";
+            activeAggregation = null;
+
+            subBasinG.selectAll(".subbasin")
+                .transition()
+                .duration(200)
+                    .style("opacity", 0);
+
+            return;
         }
 
-        updateSubbasinVisibility();
-    });
+        // If re-enabled but no selection, do nothing until user picks one
+        if (!paramSelect.value) return;
 
+        activeAggregation = paramSelect.value;
+        renderAggregationLayer(activeAggregation);
+        updateAggregationVisibility(activeAggregation);
+    });
     /*
 
     paramSelect.addEventListener("change", function () {
@@ -787,7 +823,15 @@ const noteModal = document.getElementById("custom-note-modal");
     */
 
     paramSelect.addEventListener("change", function () {
-        activeAggregation = this.value;
+        activeAggregation = this.value || null;
+
+        if (!paramCheckbox.checked || !activeAggregation) {
+            subBasinG.selectAll(".subbasin")
+                .transition()
+                .duration(200)
+                .style("opacity", 0);
+            return;
+        }
 
         renderAggregationLayer(activeAggregation);
         updateAggregationVisibility(activeAggregation);
