@@ -393,9 +393,12 @@ window.onload = function() {
             .style("opacity", 0.3)
             .style("cursor", "pointer")
             .on("click", function(event, d) {
+                if (!paramCheckbox.checked) return;
                 showPopup2(event, d.properties, layer.labelField);
             })
             .on("mouseover", function(event) {
+                if (!paramCheckbox.checked) return;
+
                 d3.select(this)
                     .transition()
                     .duration(120)
@@ -404,6 +407,8 @@ window.onload = function() {
                     .style("stroke-width", 1.5);
             })
             .on("mouseout", function() {
+                if (!paramCheckbox.checked) return;
+
                 d3.select(this)
                     .transition()
                     .duration(120)
@@ -510,13 +515,16 @@ window.onload = function() {
 
         if (!paramCheckbox.checked || !layer) {
             subBasinG.selectAll(".subbasin")
+                .style("pointer-events", "none")
                 .transition()
                 .duration(200)
-                .style("opacity", 0);
+                .style("opacity", 0)
+                .remove();
             return;
         }
 
         subBasinG.selectAll(".subbasin")
+            .style("pointer-events", "auto")
             .transition()
             .duration(300)
             .style("opacity", layer.opacity);
@@ -838,9 +846,11 @@ const noteModal = document.getElementById("custom-note-modal");
             activeAggregation = null;
 
             subBasinG.selectAll(".subbasin")
+                .style("pointer-events", "none")
                 .transition()
                 .duration(200)
-                    .style("opacity", 0);
+                    .style("opacity", 0)
+                .remove();
 
             return;
         }
@@ -865,9 +875,11 @@ const noteModal = document.getElementById("custom-note-modal");
 
         if (!paramCheckbox.checked || !activeAggregation) {
             subBasinG.selectAll(".subbasin")
+                .style("pointer-events", "none")
                 .transition()
                 .duration(200)
-                .style("opacity", 0);
+                .style("opacity", 0)
+                .remove();
             return;
         }
 
