@@ -147,6 +147,7 @@ window.onload = function() {
             .attr("class", "mounds")
             .attr("d", path.pointRadius(4)) 
             .on("click", function(event, d) {
+                event.stopPropagation();
                 updateUI(d.properties, this)
             });
 
@@ -311,7 +312,7 @@ window.onload = function() {
             .html(d => `
                 <div class="legend-content">
                     <div class="legend-color" style="background-color: ${clanColorScale(d)}"></div>
-                    <span>${d}</span>
+                    <span>${d.replace(/_/g, ' ')}</span>
                 </div>
                 <input type="checkbox" class="clan-toggle" value="${d}" checked>
             `);
@@ -556,6 +557,17 @@ window.onload = function() {
         d3.select(element).style("opacity", 1).style("stroke", "#f1c40f").style("stroke-width", "0.5px").raise();
     }
 
+    function resetUI() {
+        // Clears site info sidebar text
+        d3.select("#detail-content").html("<p class='hint'>Select a mound on the map to view archaeological data and effigy counts.</p>");
+        
+        // Resets mound styling if they were selected previously
+        d3.selectAll(".mounds")
+            .style("opacity", 1)
+            .style("stroke", null) 
+            .style("stroke-width", null)
+    }
+
     // I changed this function to increase clickability of sites when zoomed in
     // Chanodom
     const zoom = d3.zoom()
@@ -615,7 +627,10 @@ const noteModal = document.getElementById("custom-note-modal");
     }
 
     map.on("click", function(event) {
-        if (!isNoteMode) return;
+        if (!isNoteMode) {
+            resetUI();
+            return;
+        }
 
         // Calculate correct coordinates based on zoom level immediately
         const transform = d3.zoomTransform(map.node());
