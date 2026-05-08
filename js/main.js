@@ -85,7 +85,7 @@ window.onload = function() {
         d3.json("data/sub-watershed-mound-aggregate.geojson"),
         d3.json("data/clanTerritories.topojson"),
         d3.json("data/catchmentAreas2.geojson"),
-        d3.json("data/wi_presettlement_veg.json") 
+        d3.json("data/wi_presettlement_veg2.topojson") 
     ];
 
     Promise.all(promises).then(function(data) {
@@ -142,7 +142,7 @@ window.onload = function() {
 
         const realVegetation = vegFeatures.filter(d => {
             const area = d.properties.Shape_Area;
-            return d.properties.CONSD_POLY && area < 40000000000;
+            return d.properties.CONSD_POLY
         });
 
         const vegTypes = [...new Set(realVegetation.map(d => d.properties.CONSD_POLY))];
